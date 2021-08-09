@@ -1,9 +1,13 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import { getTemplateFileContent } from './utils/index';
+import { removeSync, outputFile  } from 'fs-extra';
+import { exec } from 'child_process';
+import { getTemplateFileContent, dealSvgFile } from './utils/index';
+import { join } from 'path';
+
+const rootPath = '/Users/shenjiaqi/Desktop/Home/learning/2021-plan';
 
 export function activate(context: vscode.ExtensionContext) {
-	let openPlatform = vscode.commands.registerCommand('HxmIcon.OpenPlatform', () => {
+	let openPlatform = vscode.commands.registerCommand('HxmIcon.OpenPlatform', uri => {
     const panel = vscode.window.createWebviewPanel(
       'webview',
       '同花顺Icon',
@@ -24,15 +28,17 @@ export function activate(context: vscode.ExtensionContext) {
                 'Javascript': ['js']
               }
             });
-            // 获取保存路径
-            // 生成svg-symbols.js
-            const dir = uri.path.split('/').slice(0, -1).join('/');
-            fs.readFile(`${dir}/sss.js`, (err, data) => {
-              console.log(err);
-              console.log(data.toString());
+            const saveDir = uri.path.split('/').slice(0, -1).join('/');
+            const svgPath = `${saveDir}/svg`;
+            const outPath = `${saveDir}/out`;
+            removeSync(svgPath);
+            message.data.forEach(item => {
+              outputFile(`${svgPath}/icon-${item.name}.svg`, dealSvgFile(item.svg), 'utf-8');
             });
-            console.log(dir);
-            console.log(message.data);
+            exec(`cd ${join(__dirname, '../src/utils')} && gulp default --svgPath ${svgPath} --outPath ${outPath}`,
+              (err, data, stderr) => {
+                removeSync(svgPath);
+            });
             break;
         }
       },
