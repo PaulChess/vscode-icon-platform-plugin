@@ -1,0 +1,85 @@
+[v-clock] {
+  display: none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  width: calc(100% - 20px);
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 60px 30px 30px 30px;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+}
+
+#header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-input {
+  width: 300px;
+  margin-right: 40px;
+}
+
+.current-show-area {
+  width: 400px;
+  height: 300px;
+  margin: 20px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+}
+
+.svg-show {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, .9);
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.svg-show svg {
+  width: 128px;
+  height: 128px;
+}
+
+.el-loading-mask {
+  background: none !important;
+}
+
+.checkbox-block {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+.el-checkbox__inner {
+  width: 25px !important;
+  height: 25px !important;
+}
+.el-checkbox__inner::after {
+  left: 10px !important;
+  top: 6px !important;
+}

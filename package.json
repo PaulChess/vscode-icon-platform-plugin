@@ -2,7 +2,9 @@
 	"name": "vscode-icon-platform-plugin",
 	"displayName": "vscode-icon-platform-plugin",
 	"description": "vscode-plugin icon platform download svg",
+	"publisher": "shenjiaqi",
 	"version": "0.0.1",
+	"repository": "https://github.com/PaulChess/vscode-icon-platform-plugin.git",
 	"engines": {
 		"vscode": "^1.46.0"
 	},
@@ -10,16 +12,33 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-icon-platform-plugin.helloWorld"
+		"onCommand:HxmIcon.OpenPlatform"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "vscode-icon-platform-plugin.helloWorld",
-				"title": "Hello World"
+				"command": "HxmIcon.OpenPlatform",
+				"title": "openPlatform"
 			}
-		]
+		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "HxmIcon",
+					"title": "同花顺Icon平台",
+					"icon": "src/resources/sideIcon.svg"
+				}
+			]
+		},
+		"views": {
+			"HxmIcon": [
+				{
+					"id": "HxmIcon_sidebar1",
+					"name": "sidebar"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run package",
@@ -47,5 +66,9 @@
 		"ts-loader": "^8.0.14",
 		"webpack": "^5.19.0",
 		"webpack-cli": "^4.4.0"
+	},
+	"dependencies": {
+		"handlebars": "^4.7.7",
+		"vscode-page": "0.0.1"
 	}
 }

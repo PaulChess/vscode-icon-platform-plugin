@@ -1,27 +1,47 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import { getTemplateFileContent } from './utils/index';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vscode-icon-platform-plugin" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('vscode-icon-platform-plugin.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from vscode-icon-platform-plugin!');
+	let openPlatform = vscode.commands.registerCommand('HxmIcon.OpenPlatform', () => {
+    const panel = vscode.window.createWebviewPanel(
+      'webview',
+      '同花顺Icon',
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+      }
+    );
+    panel.webview.html = getTemplateFileContent(context, 'index.html', panel.webview);
+    panel.webview.onDidReceiveMessage(
+      async message => {
+        switch(message.command) {
+          case 'exportSvgSymbolsFile':
+            const uri = await vscode.window.showSaveDialog({
+              filters: {
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                'Javascript': ['js']
+              }
+            });
+            // 获取保存路径
+            // 生成svg-symbols.js
+            const dir = uri.path.split('/').slice(0, -1).join('/');
+            fs.readFile(`${dir}/sss.js`, (err, data) => {
+              console.log(err);
+              console.log(data.toString());
+            });
+            console.log(dir);
+            console.log(message.data);
+            break;
+        }
+      },
+      undefined,
+      context.subscriptions
+    );
 	});
 
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(openPlatform);
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {}
