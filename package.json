@@ -74,6 +74,7 @@
 		"gulp-svg-symbols": "^3.2.3",
 		"gulp-svg-symbols2js": "^1.0.1",
 		"gulp-uglify": "^3.0.2",
+		"lowdb": "^2.1.0",
 		"minimist": "^1.2.5",
 		"uuid": "^8.3.2"
 	}

@@ -21,7 +21,10 @@ const fs_extra_1 = __webpack_require__(2);
 const child_process_1 = __webpack_require__(45);
 const index_1 = __webpack_require__(46);
 const path_1 = __webpack_require__(16);
-const rootPath = '/Users/shenjiaqi/Desktop/Home/learning/2021-plan';
+const lowdb_1 = __webpack_require__(65);
+const adapter = new lowdb_1.JSONFile(path_1.join(__dirname, 'db.json'));
+const db = new lowdb_1.Low(adapter);
+db.data || (db.data = { posts: {} }); // 设置默认值
 function activate(context) {
     let openPlatform = vscode.commands.registerCommand('HxmIcon.OpenPlatform', uri => {
         const panel = vscode.window.createWebviewPanel('webview', '同花顺Icon', vscode.ViewColumn.One, {
@@ -43,11 +46,35 @@ function activate(context) {
                     const outPath = `${saveDir}/out`;
                     fs_extra_1.removeSync(svgPath);
                     message.data.forEach(item => {
-                        fs_extra_1.outputFile(`${svgPath}/icon-${item.name}.svg`, index_1.dealSvgFile(item.svg), 'utf-8');
+                        fs_extra_1.outputFile(`${svgPath}/icon-${item.en_name}.svg`, index_1.dealSvgFile(item.svg), 'utf-8');
                     });
                     child_process_1.exec(`cd ${path_1.join(__dirname, '../src/utils')} && gulp default --svgPath ${svgPath} --outPath ${outPath}`, (err, data, stderr) => {
+                        // 移除掉svg文件夹
                         fs_extra_1.removeSync(svgPath);
                     });
+                    break;
+                case 'exportSvgFile':
+                    const uri1 = yield vscode.window.showSaveDialog({
+                        filters: {
+                            // eslint-disable-next-line @typescript-eslint/naming-convention
+                            'Javascript': ['js']
+                        }
+                    });
+                    const saveDir1 = uri1.path.split('/').slice(0, -1).join('/');
+                    const svgPath1 = `${saveDir1}/svg`;
+                    fs_extra_1.removeSync(svgPath1);
+                    message.data.forEach(item => {
+                        console.log(`${svgPath1}/icon-${item.en_name}.svg`);
+                        fs_extra_1.outputFile(`${svgPath1}/icon-${item.en_name}.svg`, index_1.dealSvgFile(item.svg), 'utf-8');
+                    });
+                    break;
+                case 'setLocalStorage':
+                    db.data.posts[message.key] = message.value;
+                    break;
+                case 'getStorage':
+                    panel.webview.postMessage({ command: 'onGetStorageSuccess', data: db.data.posts[message.key] });
+                    break;
+                case 'clearStorage':
                     break;
             }
         }), undefined, context.subscriptions);
@@ -3781,6 +3808,396 @@ function version(uuid) {
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (version);
+
+/***/ }),
+/* 65 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "JSONFile": () => (/* reexport safe */ _adapters_JSONFile_js__WEBPACK_IMPORTED_MODULE_0__.JSONFile),
+/* harmony export */   "JSONFileSync": () => (/* reexport safe */ _adapters_JSONFileSync_js__WEBPACK_IMPORTED_MODULE_1__.JSONFileSync),
+/* harmony export */   "LocalStorage": () => (/* reexport safe */ _adapters_LocalStorage_js__WEBPACK_IMPORTED_MODULE_2__.LocalStorage),
+/* harmony export */   "Memory": () => (/* reexport safe */ _adapters_Memory_js__WEBPACK_IMPORTED_MODULE_3__.Memory),
+/* harmony export */   "MemorySync": () => (/* reexport safe */ _adapters_MemorySync_js__WEBPACK_IMPORTED_MODULE_4__.MemorySync),
+/* harmony export */   "TextFile": () => (/* reexport safe */ _adapters_TextFile_js__WEBPACK_IMPORTED_MODULE_5__.TextFile),
+/* harmony export */   "TextFileSync": () => (/* reexport safe */ _adapters_TextFileSync_js__WEBPACK_IMPORTED_MODULE_6__.TextFileSync),
+/* harmony export */   "Low": () => (/* reexport safe */ _Low_js__WEBPACK_IMPORTED_MODULE_7__.Low),
+/* harmony export */   "LowSync": () => (/* reexport safe */ _LowSync_js__WEBPACK_IMPORTED_MODULE_8__.LowSync)
+/* harmony export */ });
+/* harmony import */ var _adapters_JSONFile_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(66);
+/* harmony import */ var _adapters_JSONFileSync_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(69);
+/* harmony import */ var _adapters_LocalStorage_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(71);
+/* harmony import */ var _adapters_Memory_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(72);
+/* harmony import */ var _adapters_MemorySync_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(73);
+/* harmony import */ var _adapters_TextFile_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(67);
+/* harmony import */ var _adapters_TextFileSync_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(70);
+/* harmony import */ var _Low_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(74);
+/* harmony import */ var _LowSync_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(76);
+
+
+
+
+
+
+
+
+
+
+
+/***/ }),
+/* 66 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "JSONFile": () => (/* binding */ JSONFile)
+/* harmony export */ });
+/* harmony import */ var _TextFile_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(67);
+
+class JSONFile {
+    constructor(filename) {
+        this.adapter = new _TextFile_js__WEBPACK_IMPORTED_MODULE_0__.TextFile(filename);
+    }
+    async read() {
+        const data = await this.adapter.read();
+        if (data === null) {
+            return null;
+        }
+        else {
+            return JSON.parse(data);
+        }
+    }
+    write(obj) {
+        return this.adapter.write(JSON.stringify(obj, null, 2));
+    }
+}
+
+
+/***/ }),
+/* 67 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "TextFile": () => (/* binding */ TextFile)
+/* harmony export */ });
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6);
+/* harmony import */ var steno__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(68);
+
+
+class TextFile {
+    constructor(filename) {
+        this.filename = filename;
+        this.writer = new steno__WEBPACK_IMPORTED_MODULE_1__.Writer(filename);
+    }
+    async read() {
+        let data;
+        try {
+            data = await fs__WEBPACK_IMPORTED_MODULE_0__.promises.readFile(this.filename, 'utf-8');
+        }
+        catch (e) {
+            if (e.code === 'ENOENT') {
+                return null;
+            }
+            throw e;
+        }
+        return data;
+    }
+    write(str) {
+        return this.writer.write(str);
+    }
+}
+
+
+/***/ }),
+/* 68 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Writer = void 0;
+const fs_1 = __importDefault(__webpack_require__(6));
+const path_1 = __importDefault(__webpack_require__(16));
+function getTempFilename(file) {
+    return path_1.default.join(path_1.default.dirname(file), '.' + path_1.default.basename(file) + '.tmp');
+}
+class Writer {
+    constructor(filename) {
+        this.locked = false;
+        this.prev = null;
+        this.next = null;
+        this.nextPromise = null;
+        this.nextData = null;
+        this.filename = filename;
+        this.tempFilename = getTempFilename(filename);
+    }
+    _add(data) {
+        this.nextData = data;
+        this.nextPromise || (this.nextPromise = new Promise((resolve, reject) => {
+            this.next = [resolve, reject];
+        }));
+        return new Promise((resolve, reject) => {
+            var _a;
+            (_a = this.nextPromise) === null || _a === void 0 ? void 0 : _a.then(resolve).catch(reject);
+        });
+    }
+    async _write(data) {
+        var _a, _b;
+        this.locked = true;
+        try {
+            await fs_1.default.promises.writeFile(this.tempFilename, data, 'utf-8');
+            await fs_1.default.promises.rename(this.tempFilename, this.filename);
+            (_a = this.prev) === null || _a === void 0 ? void 0 : _a[0]();
+        }
+        catch (err) {
+            (_b = this.prev) === null || _b === void 0 ? void 0 : _b[1](err);
+            throw err;
+        }
+        finally {
+            this.locked = false;
+            this.prev = this.next;
+            this.next = this.nextPromise = null;
+            if (this.nextData !== null) {
+                const nextData = this.nextData;
+                this.nextData = null;
+                await this.write(nextData);
+            }
+        }
+    }
+    async write(data) {
+        return this.locked ? this._add(data) : this._write(data);
+    }
+}
+exports.Writer = Writer;
+
+
+/***/ }),
+/* 69 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "JSONFileSync": () => (/* binding */ JSONFileSync)
+/* harmony export */ });
+/* harmony import */ var _TextFileSync_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(70);
+
+class JSONFileSync {
+    constructor(filename) {
+        this.adapter = new _TextFileSync_js__WEBPACK_IMPORTED_MODULE_0__.TextFileSync(filename);
+    }
+    read() {
+        const data = this.adapter.read();
+        if (data === null) {
+            return null;
+        }
+        else {
+            return JSON.parse(data);
+        }
+    }
+    write(obj) {
+        this.adapter.write(JSON.stringify(obj, null, 2));
+    }
+}
+
+
+/***/ }),
+/* 70 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "TextFileSync": () => (/* binding */ TextFileSync)
+/* harmony export */ });
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(16);
+
+
+class TextFileSync {
+    constructor(filename) {
+        this.filename = filename;
+        this.tempFilename = path__WEBPACK_IMPORTED_MODULE_1__.join(path__WEBPACK_IMPORTED_MODULE_1__.dirname(filename), `.${path__WEBPACK_IMPORTED_MODULE_1__.basename(filename)}.tmp`);
+    }
+    read() {
+        let data;
+        try {
+            data = fs__WEBPACK_IMPORTED_MODULE_0__.readFileSync(this.filename, 'utf-8');
+        }
+        catch (e) {
+            if (e.code === 'ENOENT') {
+                return null;
+            }
+            throw e;
+        }
+        return data;
+    }
+    write(str) {
+        fs__WEBPACK_IMPORTED_MODULE_0__.writeFileSync(this.tempFilename, str);
+        fs__WEBPACK_IMPORTED_MODULE_0__.renameSync(this.tempFilename, this.filename);
+    }
+}
+
+
+/***/ }),
+/* 71 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "LocalStorage": () => (/* binding */ LocalStorage)
+/* harmony export */ });
+class LocalStorage {
+    constructor(key) {
+        this.key = key;
+    }
+    read() {
+        const value = localStorage.getItem(this.key);
+        if (value === null) {
+            return null;
+        }
+        return JSON.parse(value);
+    }
+    write(obj) {
+        localStorage.setItem(this.key, JSON.stringify(obj));
+    }
+}
+
+
+/***/ }),
+/* 72 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Memory": () => (/* binding */ Memory)
+/* harmony export */ });
+class Memory {
+    constructor() {
+        this.data = null;
+    }
+    read() {
+        return Promise.resolve(this.data);
+    }
+    write(obj) {
+        this.data = obj;
+        return Promise.resolve();
+    }
+}
+
+
+/***/ }),
+/* 73 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "MemorySync": () => (/* binding */ MemorySync)
+/* harmony export */ });
+class MemorySync {
+    constructor() {
+        this.data = null;
+    }
+    read() {
+        return this.data || null;
+    }
+    write(obj) {
+        this.data = obj;
+    }
+}
+
+
+/***/ }),
+/* 74 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Low": () => (/* binding */ Low)
+/* harmony export */ });
+/* harmony import */ var _MissingAdapterError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(75);
+
+class Low {
+    constructor(adapter) {
+        this.data = null;
+        if (adapter) {
+            this.adapter = adapter;
+        }
+        else {
+            throw new _MissingAdapterError_js__WEBPACK_IMPORTED_MODULE_0__.MissingAdapterError();
+        }
+    }
+    async read() {
+        this.data = await this.adapter.read();
+    }
+    async write() {
+        if (this.data) {
+            await this.adapter.write(this.data);
+        }
+    }
+}
+
+
+/***/ }),
+/* 75 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "MissingAdapterError": () => (/* binding */ MissingAdapterError)
+/* harmony export */ });
+class MissingAdapterError extends Error {
+    constructor() {
+        super();
+        this.message = 'Missing Adapter';
+    }
+}
+
+
+/***/ }),
+/* 76 */
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "LowSync": () => (/* binding */ LowSync)
+/* harmony export */ });
+/* harmony import */ var _MissingAdapterError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(75);
+
+class LowSync {
+    constructor(adapter) {
+        this.data = null;
+        if (adapter) {
+            this.adapter = adapter;
+        }
+        else {
+            throw new _MissingAdapterError_js__WEBPACK_IMPORTED_MODULE_0__.MissingAdapterError();
+        }
+    }
+    read() {
+        this.data = this.adapter.read();
+    }
+    write() {
+        if (this.data !== null) {
+            this.adapter.write(this.data);
+        }
+    }
+}
+
 
 /***/ })
 /******/ 	]);

@@ -26,7 +26,17 @@ body {
   padding: 60px 30px 30px 30px;
 }
 
-.container {
+#app .loading-block {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(18, 18, 18, .4);
+  z-index: 999;
+}
+
+#app .container {
   width: 100%;
   height: 100%;
 }
@@ -111,7 +121,7 @@ body {
   align-items: center;
   margin: 30px 0 50px 0;
 }
-.btns-block > div{
+.btns-block > button{
   margin: 0 40px;
 }
 
