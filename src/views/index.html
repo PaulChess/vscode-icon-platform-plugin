@@ -21,28 +21,44 @@
         </div>
         <el-button @click="searchIcon">搜索</el-button>
       </header>
-      <div class="current-show-area" v-loading="loading">
-        <div class="svg-show" v-if="currentSvg && !loading">
-          <div v-html="currentSvg"></div>
-          <div class="checkbox-block">
-            <el-checkbox v-model="checked"></el-checkbox>
-          </div>
-        </div>
-        <div class="empty-block" v-if="!loading && !currentSvg">
+      <!-- 搜索结果区域 -->
+      <div class="search-result-container">
+        <ul class="search-list" v-if="searchList.length > 0">
+          <li class="search-item" v-for="item in searchList" :key="item.id">
+            <div class="svg-block" v-html="item.svg"></div>
+            <div class="checkbox-block">
+              <el-checkbox v-model="item.checked" @change="checkedChange"></el-checkbox>
+            </div>
+          </li>
+        </ul>
+        <div class="empty-block" v-else>
           <el-empty description="描述文字"></el-empty>
         </div>
       </div>
 
-      <div class="choosed-icon-block">
+      <!-- 已选择的图标展示区域 -->
+      <div class="choosed-icon-block" v-if="choosedList.length > 0">
+        <h3>已选择的图标列表:</h3>
         <ul class="choosed-icon-list">
-          <li class="choosed-icon-item" v-for="(item, index) in choosedIconList" :key="item">
-            <div class="icon" v-html="item.svgCode"></div>
-            <div class="name">{{ item.search }}</div>
+          <li class="choosed-icon-item" v-for="(item, index) in choosedList" :key="item">
+            <i class="el-icon-circle-close close-icon" @click="cancelChoose(item)"></i>
+            <div class="icon" v-html="item.svg"></div>
+            <!-- <div class="name">{{ item.en_name }}</div> -->
           </li>
         </ul>
 
-        <el-button @click="exportSvgSymbolsFile">导出symbolsjs</el-button>
-        <el-button>导出svg</el-button>
+        <!-- 按钮操作区域 -->
+        <div class="btns-block" v-if="choosedList.length > 0">
+          <div>
+            <el-button @click="exportSvgSymbolsFile">导出symbolsjs</el-button>
+          </div>
+          <div>
+            <el-button>导出svg</el-button>
+          </div>
+          <div>
+            <el-button>重置</el-button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -61,35 +77,45 @@
         return {
           loading: false,
           search: '',
-          currentSvg: '',
-          checked: false,
-          choosedIconList: []
+          searchList: [],
+          choosedList: []
         }
       },
       watch: {
-        checked(val) {
-          if (val) {
-            this.choosedIconList.push({
-              name: this.search,
-              svgCode: this.currentSvg,
-            });
+        searchList: {
+          deep: true,
+          handler: function(list) {
+            // v-model对象的checked属性，如果checked属性值为false checkbox选项框无法再进行切换，因此需要删除
+            if (Array.isArray(list) && list.length > 0) {
+              list.forEach(item => {
+                if (item['checked'] === false) {
+                  item['checked'] = '';
+                }
+              })
+            }
           }
         },
-        choosedIconList: {
-          deep: true,
-          handler: function(val) {
-            console.log(val);
-          }
-        }
       },
       methods: {
         async searchIcon() {
           this.loading = true;
-          const res = await axios.get(`${searchUrl}?id=${this.search}`);
+          const res = await axios.get(
+            // TODO: 部门id可配置
+            `${searchUrl}?project_id=0&page=1&name=${this.search}`
+          );
+          // 重置搜索列表
+          this.searchList = [];
           if (res.data.status_code === 0) {
-            this.currentSvg = res.data.data.svg;
-          } else {
-            this.currentSvg = '1';
+            this.searchList = res.data.data;
+            if (Array.isArray(this.searchList) && this.searchList.length > 0) {
+              // 将searchList和choosedList进行比对
+              console.log(this.choosedList);
+              this.searchList.forEach(item => {
+                item['checked'] = this.choosedList.some(
+                  chooseItem => chooseItem.id === item.id
+                ) ? true : ''
+              })
+            }
           }
           this.loading = false;
         },
@@ -155,7 +181,50 @@
 </svg>`
             }]
           })
+        },
+        checkedChange(val) {
+          // checked改变的时候比对一下
+          const checkedList = this.searchList.filter(item => item.checked);
+          const uncheckedList = this.searchList.filter(item => !item.checked);
+          checkedList.forEach(item => {
+            // 遍历当前搜索列表中的选中项，如果choosedList中没有则push进去
+            if (!this.choosedList.some(chooseItem => chooseItem.id === item.id)) {
+              this.choosedList.push(item);
+            }
+          })
+          uncheckedList.forEach(item => {
+            for (let i = 0; i < this.choosedList.length; i++) {
+              if (this.choosedList[i].id === item.id) {
+                this.choosedList.splice(i, 1);
+              }
+            }
+          })
+          // TODO: 将choosedList存入缓存
+        },
+        cancelChoose(item) {
+          for (let i = 0; i < this.choosedList.length; i++) {
+            if (item.id === this.choosedList[i].id) {
+              this.choosedList.splice(i, 1);
+            }
+          }
+          // 联动searchList, 删除对应项的checked属性
+          if (Array.isArray(this.searchList) && this.searchList.length > 0) {
+            for (let i = 0; i < this.searchList.length; i++) {
+              if (this.searchList[i].id === item.id) {
+                this.$set(this.searchList[i], 'checked', '');
+              }
+            }
+          }
+          // TODO: 将choosedList存入缓存
         }
+      },
+      mounted() {
+        // TODO: 从缓存中取choosedList
+        document.addEventListener('keydown', e => {
+          if (e.keyCode === 13) {
+            this.searchIcon();
+          }
+        })
       },
     })
   </script>
