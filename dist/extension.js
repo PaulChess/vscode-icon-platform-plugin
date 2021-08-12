@@ -75,6 +75,7 @@ function activate(context) {
                     panel.webview.postMessage({ command: 'onGetStorageSuccess', data: db.data.posts[message.key] });
                     break;
                 case 'clearStorage':
+                    db.data.posts[message.key] = '';
                     break;
             }
         }), undefined, context.subscriptions);

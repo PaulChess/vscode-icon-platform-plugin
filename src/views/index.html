@@ -12,6 +12,16 @@
   <div id="app" v-cloak>
     <div class="container">
       <header id="header">
+        <el-select class="department-selector"
+          v-model="currentDepartmentNo"
+          placeholder="请选择部门">
+          <el-option
+            v-for="item in departmentList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id">
+          </el-option>
+        </el-select>
         <div class="search-input">
           <el-input
             v-model="search"
@@ -32,7 +42,7 @@
           </li>
         </ul>
         <div class="empty-block" v-else>
-          <el-empty description="描述文字"></el-empty>
+          <el-empty description="啊哦~无查询结果"></el-empty>
         </div>
       </div>
 
@@ -51,7 +61,7 @@
         <div class="btns-block" v-if="choosedList.length > 0">
           <el-button @click="exportSvgSymbolsFile">导出SymbolsJS</el-button>
           <el-button @click="exportSvgFile">导出SVG文件</el-button>
-          <el-button>重置(清空Storage)</el-button>
+          <el-button @click="reset">重置(同时清空Storage)</el-button>
         </div>
       </div>
 
@@ -68,14 +78,26 @@
       el: '#app',
       data() {
         return {
-          showApp: false,
           loading: false,
           search: '',
+          // 防止第一次进入页面时的watch导致的触发搜索
+          startCurrentDepartmentNoWatch: false,
+          currentDepartmentNo: 0,
+          departmentList: [],
           searchList: [],
           choosedList: []
         }
       },
       watch: {
+        // 重新选择部门需要重新自动搜索
+        currentDepartmentNo(val) {
+          console.log(this.startCurrentDepartmentNoWatch);
+          if (this.startCurrentDepartmentNoWatch) {
+            this.searchIcon();
+            setLocalStorage(DEPARTMENT_NO_STORAGE_KEY, val);
+          }
+        },
+
         searchList: {
           deep: true,
           handler: function(list) {
@@ -92,11 +114,25 @@
         },
       },
       methods: {
+        async getDepartmentList() {
+          this.loading = true;
+          const res = await axios.get(departmentUrl);
+          if (res.data.status_code === 0) {
+            this.departmentList = res.data.data;
+            if (isTrueArray(this.departmentList)) {
+              this.departmentList.unshift({
+                id: 0,
+                name: '全部'
+              })
+            }
+          }
+          this.loading = false;
+        },
+
         async searchIcon() {
           this.loading = true;
           const res = await axios.get(
-            // TODO: 部门id可配置
-            `${searchUrl}?project_id=0&page=1&name=${this.search}`
+            `${searchUrl}?project_id=${this.currentDepartmentNo}&page=1&pagesize=10000&name=${this.search}`
           );
           // 重置搜索列表
           this.searchList = [];
@@ -115,15 +151,15 @@
         },
 
         checkedChange(val) {
-          // checked改变的时候比对一下
           const checkedList = this.searchList.filter(item => item.checked);
           const uncheckedList = this.searchList.filter(item => !item.checked);
+          // 遍历当前搜索列表中的选中项，如果choosedList中没有则push进去
           checkedList.forEach(item => {
-            // 遍历当前搜索列表中的选中项，如果choosedList中没有则push进去
             if (!this.choosedList.some(chooseItem => chooseItem.id === item.id)) {
               this.choosedList.push(item);
             }
           })
+          // 遍历当前列表中的未选中项，如果choosedList中有则表示应该删除choosedList中的该项
           uncheckedList.forEach(item => {
             for (let i = 0; i < this.choosedList.length; i++) {
               if (this.choosedList[i].id === item.id) {
@@ -153,6 +189,14 @@
           setLocalStorage(SEARCH_LIST_STORAGE_KEY, JSON.stringify(this.searchList));
         },
 
+        reset() {
+          this.search = '';
+          this.searchList = [];
+          this.choosedList = [];
+          clearStorage(SEARCH_LIST_STORAGE_KEY);
+          clearStorage(CHOOSED_LIST_STORAGE_KEY);
+        },
+
         exportSvgSymbolsFile() {
           vscode.postMessage({
             command: 'exportSvgSymbolsFile',
@@ -167,31 +211,64 @@
           })
         },
 
-        init() {
-          // TODO: 优化异步
+        initStorage() {
           getStorage(SEARCH_LIST_STORAGE_KEY, {
-            success: res => {
-              if (res) {
-                this.searchList = JSON.parse(JSON.stringify(JSON.parse(res)))
-                getStorage(CHOOSED_LIST_STORAGE_KEY, {
-                  success: choosedRes => {
-                    if (choosedRes) {
-                      this.choosedList = JSON.parse(JSON.stringify(JSON.parse(choosedRes)));
-                    }
-                  }
-                })
+            success: searchRes => {
+              if (searchRes) {
+                this.searchList = JSON.parse(JSON.stringify(JSON.parse(searchRes)))
               }
+              getStorage(CHOOSED_LIST_STORAGE_KEY, {
+                success: choosedRes => {
+                  if (choosedRes) {
+                    this.choosedList = JSON.parse(JSON.stringify(JSON.parse(choosedRes)));
+                  }
+                  getStorage(DEPARTMENT_NO_STORAGE_KEY, {
+                    success: deparmentNoRes => {
+                      if (deparmentNoRes) {
+                        this.currentDepartmentNo = deparmentNoRes;
+                      }
+                      // 加定时器是防止vue的watch监听微任务的影响.
+                      setTimeout(() => {
+                        this.startCurrentDepartmentNoWatch = true;
+                      }, 100);
+                    }
+                  })
+                }
+              })
             }
           })
-          document.addEventListener('keydown', e => {
-            if (e.keyCode === 13) {
-              this.searchIcon();
-            }
-          })
+        },
+
+        enterKeyPressEvent(e) {
+          if (e.keyCode === 13) {
+            this.searchIcon();
+          }
+        },
+
+        initEnterKeyListener() {
+          document.addEventListener('keydown', 
+            (e) => this.enterKeyPressEvent(e)
+          );
+        },
+
+        removeEnterKeyListener() {
+          document.removeEventListener('keydown',
+            (e) => this.enterKeyPressEvent(e)
+          );
+        },
+
+        init() {
+          this.getDepartmentList();
+          this.initStorage();
+          this.initEnterKeyListener();
         }
       },
       created() {
         this.init();
+      },
+
+      beforeDestroy() {
+        this.removeEnterKeyListener();
       },
     })
   </script>

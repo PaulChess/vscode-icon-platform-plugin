@@ -49,7 +49,7 @@ body {
 
 .search-input {
   width: 300px;
-  margin-right: 40px;
+  margin: 0 40px 0 10px;
 }
 
 .search-list {
@@ -119,7 +119,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 30px 0 50px 0;
+  padding: 30px 0 50px 0;
 }
 .btns-block > button{
   margin: 0 40px;
@@ -129,6 +129,10 @@ body {
 /* element style */
 .el-loading-mask {
   background: none !important;
+}
+
+.el-select {
+  width: 100px !important;
 }
 
 .el-checkbox__inner {

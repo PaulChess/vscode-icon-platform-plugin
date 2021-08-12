@@ -1,9 +1,11 @@
 // storage key
 const CHOOSED_LIST_STORAGE_KEY = 'hxm-icon-platform-choosed-list';
 const SEARCH_LIST_STORAGE_KEY = 'hxm-icon-platform-search-list';
+const DEPARTMENT_NO_STORAGE_KEY = 'hxm-icon-platform-department-no';
 
 // Api
 const searchUrl = 'https://datav.iwencai.com/resource/api/icon/search';
+const departmentUrl = 'https://datav.iwencai.com/resource/api/project/search';
 
 const vscode = acquireVsCodeApi();
 
@@ -29,6 +31,13 @@ function getStorage(key,params){
   vscode.postMessage({
     command: 'getStorage',
     key: key
+  });
+}
+
+function clearStorage(k) {
+  vscode.postMessage({
+    command: 'clearStorage',
+    key: k,
   });
 }
 
