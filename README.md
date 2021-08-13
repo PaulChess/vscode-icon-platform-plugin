@@ -1,1 +1,2 @@
-hxm-vscode-icon
+vscode-icon-platform-download
+sjq shenjiaqi BlackCodingCat
