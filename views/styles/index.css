@@ -1,0 +1,146 @@
+[v-clock] {
+  display: none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+li {
+  list-style: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  width: calc(100% - 20px);
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 60px 30px 30px 30px;
+}
+
+#app .loading-block {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(18, 18, 18, .4);
+  z-index: 999;
+}
+
+#app .container {
+  width: 100%;
+  height: 100%;
+}
+
+#header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-input {
+  width: 300px;
+  margin: 0 40px 0 10px;
+}
+
+.search-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.search-item {
+  width: 80px;
+  height: 80px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 40px;
+}
+
+.search-item .svg-block {
+  width: 40px;
+  height: 40px;
+}
+.search-item .svg-block svg {
+  width: 100%;
+  height: 100%;
+}
+.search-item .checkbox-block {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+/* 选择的图标列表 */
+.choosed-icon-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+.choosed-icon-item {
+  width: 50px;
+  height: 50px;
+  margin: 20px;
+  background-color: #fff;
+  position: relative;
+}
+.choosed-icon-item .close-icon {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  font-size: 18px;
+  cursor: pointer;
+  color: #DCDFE6;
+}
+.choosed-icon-item .icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.choosed-icon-item .icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* 按钮组 */
+.btns-block {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 0 50px 0;
+}
+.btns-block > button{
+  margin: 0 40px;
+}
+
+
+/* element style */
+.el-loading-mask {
+  background: none !important;
+}
+
+.el-select {
+  width: 100px !important;
+}
+
+.el-checkbox__inner {
+  width: 20px !important;
+  height: 20px !important;
+  border: 1px solid #409eff;
+}
+.el-checkbox__inner::after {
+  left: 8px !important;
+  top: 4px !important;
+}

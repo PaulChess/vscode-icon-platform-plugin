@@ -1,15 +1,15 @@
 {
-	"name": "hxm-vscode-icon-download",
-	"publisher": "shenjiaqi",
-	"displayName": "hxm-vscode-icon-download",
-	"description": "",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.35.0"
-	},
-	"categories": [
-		"Other"
-	],
+  "name": "hxm-vscode-icon-download",
+  "publisher": "shenjiaqi",
+  "displayName": "hxm-vscode-icon-download",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.35.0"
+  },
+  "categories": [
+    "Other"
+  ],
   "repository": {
     "url": "https://github.com/PaulChess/vscode-icon-platform-plugin.git"
   },
@@ -21,17 +21,17 @@
     "platform",
     "plugin"
   ],
-	"activationEvents": [
-		"onView:download_svg",
+  "activationEvents": [
+    "onView:download_svg",
     "onView:other"
-	],
-	"main": "./extension.js",
-	"contributes": {
+  ],
+  "main": "./extension.js",
+  "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
           "id": "hxmui",
-          "title": "同花顺图标下载",
+          "title": "SVG图标管理平台",
           "icon": "resources/sideIcon.svg"
         }
       ]
@@ -40,7 +40,7 @@
       "hxmui": [
         {
           "id": "download_svg",
-          "name": "下载svg图标"
+          "name": "同花顺Hux平台图标下载"
         },
         {
           "id": "other",
@@ -48,21 +48,31 @@
         }
       ]
     }
-	},
-	"scripts": {
-		"lint": "eslint .",
-		"pretest": "npm run lint",
-		"test": "node ./test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/vscode": "^1.35.0",
-		"@types/glob": "^7.1.3",
-		"@types/mocha": "^8.0.4",
-		"@types/node": "^12.11.7",
-		"eslint": "^7.19.0",
-		"glob": "^7.1.6",
-		"mocha": "^8.2.1",
-		"typescript": "^4.1.3",
-		"vscode-test": "^1.5.0"
-	}
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.35.0",
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^12.11.7",
+    "eslint": "^7.19.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.2.1",
+    "typescript": "^4.1.3",
+    "vscode-test": "^1.5.0"
+  },
+  "dependencies": {
+    "fs-extra": "^10.0.0",
+    "gulp": "^4.0.2",
+    "gulp-svg-symbols": "^3.2.3",
+    "gulp-svg-symbols2js": "^1.0.1",
+    "gulp-uglify": "^3.0.2",
+    "lowdb": "^1.0.0",
+    "minimist": "^1.2.5",
+    "uuid": "^8.3.2"
+  }
 }

@@ -15,8 +15,8 @@ class SideBarTree {
   getChildren() {
     const r_cates = [
       {
-        title: '首页',
-        icon: 'sideIcon.svg'
+        title: 'Home',
+        icon: 'home.svg'
       }
     ];
     const fin_items = [];

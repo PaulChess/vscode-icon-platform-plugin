@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./styles/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="./scripts/main.js"></script>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="container">
+      <header id="header">
+        <el-select class="department-selector"
+          v-model="currentDepartmentNo"
+          placeholder="请选择部门">
+          <el-option
+            v-for="item in departmentList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id">
+          </el-option>
+        </el-select>
+        <div class="search-input">
+          <el-input
+            v-model="search"
+            placeholder="请输入图标名称"
+            :autofocus="true">
+          </el-input>
+        </div>
+        <el-button @click="searchIcon">搜索</el-button>
+      </header>
+      <!-- 搜索结果区域 -->
+      <div class="search-result-container">
+        <ul class="search-list" v-if="searchList.length > 0">
+          <li class="search-item" v-for="item in searchList" :key="item.id">
+            <div class="svg-block" v-html="item.svg"></div>
+            <div class="checkbox-block">
+              <el-checkbox v-model="item.checked" @change="checkedChange"></el-checkbox>
+            </div>
+          </li>
+        </ul>
+        <div class="empty-block" v-else>
+          <el-empty description="啊哦~无查询结果"></el-empty>
+        </div>
+      </div>
+
+      <!-- 已选择的图标展示区域 -->
+      <div class="choosed-icon-block" v-if="choosedList.length > 0">
+        <h3>已选择的图标列表:</h3>
+        <ul class="choosed-icon-list">
+          <li class="choosed-icon-item" v-for="(item, index) in choosedList" :key="item">
+            <i class="el-icon-circle-close close-icon" @click="cancelChoose(item)"></i>
+            <div class="icon" v-html="item.svg"></div>
+            <!-- <div class="name">{{ item.en_name }}</div> -->
+          </li>
+        </ul>
+
+        <!-- 按钮操作区域 -->
+        <div class="btns-block" v-if="choosedList.length > 0">
+          <el-button @click="exportSvgSymbolsFile">导出SymbolsJS</el-button>
+          <el-button @click="exportSvgFile">导出SVG文件</el-button>
+          <el-button @click="reset">重置(同时清空Storage)</el-button>
+        </div>
+      </div>
+
+      <div class="loading-block" v-loading="loading" v-if="loading"></div>
+    </div>
+  </div>
+  
+
+  <script type="text/javascript">
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          loading: false,
+          search: '',
+          // 防止第一次进入页面时的watch导致的触发搜索
+          startCurrentDepartmentNoWatch: false,
+          currentDepartmentNo: 0,
+          departmentList: [],
+          searchList: [],
+          choosedList: []
+        }
+      },
+      watch: {
+        // 重新选择部门需要重新自动搜索
+        currentDepartmentNo(val) {
+          console.log(this.startCurrentDepartmentNoWatch);
+          if (this.startCurrentDepartmentNoWatch) {
+            this.searchIcon();
+            setLocalStorage(DEPARTMENT_NO_STORAGE_KEY, val);
+          }
+        },
+
+        searchList: {
+          deep: true,
+          handler: function(list) {
+            // checkbox的一个小hack!!
+            // v-model对象的checked属性，如果checked属性值为false checkbox选项框无法再进行切换，因此需要删除
+            if (isTrueArray(list)) {
+              list.forEach(item => {
+                if (item['checked'] === false) {
+                  item['checked'] = '';
+                }
+              })
+            }
+          }
+        },
+      },
+      methods: {
+        async getDepartmentList() {
+          this.loading = true;
+          const res = await axios.get(departmentUrl);
+          if (res.data.status_code === 0) {
+            this.departmentList = res.data.data;
+            if (isTrueArray(this.departmentList)) {
+              this.departmentList.unshift({
+                id: 0,
+                name: '全部'
+              })
+            }
+          }
+          this.loading = false;
+        },
+
+        async searchIcon() {
+          this.loading = true;
+          const res = await axios.get(
+            `${searchUrl}?project_id=${this.currentDepartmentNo}&page=1&pagesize=10000&name=${this.search}`
+          );
+          // 重置搜索列表
+          this.searchList = [];
+          if (res.data.status_code === 0) {
+            this.searchList = res.data.data;
+            if (isTrueArray(this.searchList)) {
+              // 将searchList和choosedList进行比对
+              this.searchList.forEach(item => {
+                item['checked'] = this.choosedList.some(
+                  chooseItem => chooseItem.id === item.id
+                ) ? true : ''
+              })
+            }
+          }
+          this.loading = false;
+        },
+
+        checkedChange(val) {
+          const checkedList = this.searchList.filter(item => item.checked);
+          const uncheckedList = this.searchList.filter(item => !item.checked);
+          // 遍历当前搜索列表中的选中项，如果choosedList中没有则push进去
+          checkedList.forEach(item => {
+            if (!this.choosedList.some(chooseItem => chooseItem.id === item.id)) {
+              this.choosedList.push(item);
+            }
+          })
+          // 遍历当前列表中的未选中项，如果choosedList中有则表示应该删除choosedList中的该项
+          uncheckedList.forEach(item => {
+            for (let i = 0; i < this.choosedList.length; i++) {
+              if (this.choosedList[i].id === item.id) {
+                this.choosedList.splice(i, 1);
+              }
+            }
+          })
+          setLocalStorage(CHOOSED_LIST_STORAGE_KEY, JSON.stringify(this.choosedList));
+          setLocalStorage(SEARCH_LIST_STORAGE_KEY, JSON.stringify(this.searchList));
+        },
+
+        cancelChoose(item) {
+          for (let i = 0; i < this.choosedList.length; i++) {
+            if (item.id === this.choosedList[i].id) {
+              this.choosedList.splice(i, 1);
+            }
+          }
+          // 联动searchList, 删除对应项的checked属性
+          if (isTrueArray(this.searchList)) {
+            for (let i = 0; i < this.searchList.length; i++) {
+              if (this.searchList[i].id === item.id) {
+                this.$set(this.searchList[i], 'checked', '');
+              }
+            }
+          }
+          setLocalStorage(CHOOSED_LIST_STORAGE_KEY, JSON.stringify(this.choosedList));
+          setLocalStorage(SEARCH_LIST_STORAGE_KEY, JSON.stringify(this.searchList));
+        },
+
+        reset() {
+          this.search = '';
+          this.searchList = [];
+          this.choosedList = [];
+          clearStorage(SEARCH_LIST_STORAGE_KEY);
+          clearStorage(CHOOSED_LIST_STORAGE_KEY);
+        },
+
+        exportSvgSymbolsFile() {
+          vscode.postMessage({
+            command: 'exportSvgSymbolsFile',
+            data: this.choosedList
+          })
+        },
+
+        exportSvgFile() {
+          vscode.postMessage({
+            command: 'exportSvgFile',
+            data: this.choosedList
+          })
+        },
+
+        initStorage() {
+          getStorage(SEARCH_LIST_STORAGE_KEY, {
+            success: searchRes => {
+              if (searchRes) {
+                this.searchList = JSON.parse(JSON.stringify(JSON.parse(searchRes)))
+              }
+              getStorage(CHOOSED_LIST_STORAGE_KEY, {
+                success: choosedRes => {
+                  if (choosedRes) {
+                    this.choosedList = JSON.parse(JSON.stringify(JSON.parse(choosedRes)));
+                  }
+                  getStorage(DEPARTMENT_NO_STORAGE_KEY, {
+                    success: deparmentNoRes => {
+                      if (deparmentNoRes) {
+                        this.currentDepartmentNo = deparmentNoRes;
+                      }
+                      // 加定时器是防止vue的watch监听微任务的影响.
+                      setTimeout(() => {
+                        this.startCurrentDepartmentNoWatch = true;
+                      }, 100);
+                    }
+                  })
+                }
+              })
+            }
+          })
+        },
+
+        enterKeyPressEvent(e) {
+          if (e.keyCode === 13) {
+            this.searchIcon();
+          }
+        },
+
+        initEnterKeyListener() {
+          document.addEventListener('keydown', 
+            (e) => this.enterKeyPressEvent(e)
+          );
+        },
+
+        removeEnterKeyListener() {
+          document.removeEventListener('keydown',
+            (e) => this.enterKeyPressEvent(e)
+          );
+        },
+
+        init() {
+          this.getDepartmentList();
+          this.initStorage();
+          this.initEnterKeyListener();
+        }
+      },
+      created() {
+        this.init();
+      },
+
+      beforeDestroy() {
+        this.removeEnterKeyListener();
+      },
+    })
+  </script>
+</body>
+</html>
