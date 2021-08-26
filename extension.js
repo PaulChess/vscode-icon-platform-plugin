@@ -1,11 +1,13 @@
 const vscode = require('vscode');
-const { join, dirname, resolve } = require('path');
-const fs = require('fs');
-const { exec } = require('child_process');
-const { removeSync, outputFile  } = require('fs-extra');
+const fs = require('fs'); 
+const gulp = require('gulp');
+const svgSymbols = require('gulp-svg-symbols');
+const svgSymbols2js = require('gulp-svg-symbols2js');
 const low = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
 const SidebarTree = require('./configs/sidebarTree');
+const { join, dirname, resolve, sep } = require('path');
+const { removeSync, outputFile } = require('fs-extra');
 const { dealSvgFile } = require('./utils/svgUtils');
 
 const adapter = new FileSync(join(__dirname,'db.json'));
@@ -36,20 +38,15 @@ function activate(context) {
                 'Javascript': ['js']
               }
             });
-            const saveDir = uri.path.split('/').slice(0, -1).join('/');
-            const svgPath = `${saveDir}/svg`;
-            const outPath = `${saveDir}/out`;
-            console.log('svgPath', svgPath);
-            console.log('outPath', outPath);
-            console.log(join(__dirname, 'src/utils'));
-            removeSync(svgPath);
-            message.data.forEach(item => {
-              outputFile(`${svgPath}/icon-${item.en_name}.svg`, dealSvgFile(item.svg), 'utf-8');
-            });
-            exec(`cd ${join(__dirname, 'utils')} && gulp default --svgPath ${svgPath} --outPath ${outPath}`,
-              () => {
-                // 移除掉svg文件夹
-                removeSync(svgPath);
+            const saveDir = uri.fsPath.split(sep).slice(0, -1).join(sep);
+            const svgPath = join(saveDir, 'svg');
+            const outPath = join(saveDir, 'out');
+            generateSvgFolders(svgPath, message.data).then(() => {
+              setTimeout(() => {
+                genSvgSymbolsJs(svgPath, outPath, () => {
+                  removeSync(svgPath);
+                });
+              }, 10);
             });
             break;
           case 'exportSvgFile':
@@ -58,13 +55,9 @@ function activate(context) {
                 'Javascript': ['js']
               }
             });
-            const saveDir1 = uri1.path.split('/').slice(0, -1).join('/');
-            const svgPath1 = `${saveDir1}/svg`;
-            removeSync(svgPath1);
-            message.data.forEach(item => {
-              console.log(`${svgPath1}/icon-${item.en_name}.svg`);
-              outputFile(`${svgPath1}/icon-${item.en_name}.svg`, dealSvgFile(item.svg), 'utf-8');
-            });
+            const saveDir1 = uri1.fsPath.split(sep).slice(0, -1).join(sep);
+            const svgPath1 = join(saveDir1, 'svg');
+            generateSvgFolders(svgPath1, message.data, false);
             break;
           case 'setLocalStorage':
             db.data.posts[message.key] = message.value;
@@ -83,6 +76,27 @@ function activate(context) {
 	});
 
 	context.subscriptions.push(openSite);
+}
+
+function genSvgSymbolsJs(svgPath, outPath, callback = () => {}) {
+  removeSync(outPath);
+  return gulp
+    .src(`${svgPath}/*.svg`)
+    .pipe(svgSymbols())
+    .pipe(svgSymbols2js())
+    .pipe(gulp.dest(`${outPath}`))
+    .on('end', () => { callback() })
+}
+
+
+function generateSvgFolders(svgPath, dataArr, useIconPrefix = true) {
+  return new Promise((resolve) => {
+    removeSync(svgPath);
+    dataArr.forEach(item => {
+      outputFile(join(svgPath, useIconPrefix ? `icon-${item.en_name}.svg` : `${item.en_name}.svg`), dealSvgFile(item.svg), 'utf-8');
+    });
+    resolve(true);
+  })
 }
 
 function getWebViewContent(context, templatePath) {

@@ -3,7 +3,7 @@
   "publisher": "shenjiaqi",
   "displayName": "hxm-vscode-icon-download",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.35.0"
   },
@@ -73,6 +73,7 @@
     "gulp-uglify": "^3.0.2",
     "lowdb": "^1.0.0",
     "minimist": "^1.2.5",
+    "svg-symboljs": "0.0.3",
     "uuid": "^8.3.2"
   }
 }
