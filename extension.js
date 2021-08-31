@@ -28,6 +28,7 @@ function activate(context) {
         retainContextWhenHidden: true
       }
     );
+    panel.iconPath = vscode.Uri.file(join(__dirname, 'resources', 'home.svg'));
     panel.webview.html = getWebViewContent(context, 'views/index.html');
     panel.webview.onDidReceiveMessage(
       async message => {

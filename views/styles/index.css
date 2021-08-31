@@ -19,6 +19,12 @@ body {
   width: calc(100% - 20px);
 }
 
+.logo {
+  width: 200px;
+  background-color: #fff;
+  padding: 10px;
+}
+
 #app {
   width: 100%;
   height: 100%;
@@ -41,6 +47,10 @@ body {
   height: 100%;
 }
 
+#active-frame body {
+  padding: 0;
+}
+
 #header {
   display: flex;
   justify-content: center;
@@ -58,19 +68,29 @@ body {
 }
 
 .search-item {
-  width: 80px;
-  height: 80px;
-  background-color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 160px;
+  background: #fff;
   position: relative;
   margin: 40px;
+  color: #323232;
+  box-sizing: border-box;
+  padding-bottom: 10px;
+  border-radius: 6px;
+}
+
+.search-item:hover {
+  background: linear-gradient(60deg, #e6e6e6, #ffffff);
+  /* box-shadow:  2px 2px 60px #e0e0e0,
+               -2px -2px 60px #ffffff; */
+  box-shadow: 3px 2px 5px #666;
+  cursor: pointer;
 }
 
 .search-item .svg-block {
   width: 40px;
   height: 40px;
+  margin: 10px auto;
+  margin-top: 20px;
 }
 .search-item .svg-block svg {
   width: 100%;
@@ -78,8 +98,34 @@ body {
 }
 .search-item .checkbox-block {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 5px;
+  right: 5px;
+}
+
+.search-item .en-name,
+.search-item .zh-name {
+  word-wrap:break-word; 
+  word-break:break-all;
+  box-sizing: border-box;
+  padding: 0 6px;
+  /* 显示2行 */
+  display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	text-overflow: ellipsis;
+	overflow: hidden;
+  height: 35px;
+  /* 宽度自适应 */
+  width: fit-content;
+  margin: auto;
+}
+
+.search-item .en-name {
+  margin-top: 12px;
+}
+
+.search-item .zh-name {
+  margin-top: 6px;
 }
 
 /* 选择的图标列表 */
@@ -93,6 +139,7 @@ body {
   margin: 20px;
   background-color: #fff;
   position: relative;
+  cursor: pointer;
 }
 .choosed-icon-item .close-icon {
   position: absolute;
@@ -100,7 +147,7 @@ body {
   right: -11px;
   font-size: 18px;
   cursor: pointer;
-  color: #DCDFE6;
+  color: #bbb;
 }
 .choosed-icon-item .icon {
   width: 100%;

@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <link rel="stylesheet" href="./styles/index.css">
-  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-  <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
-  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <link rel="stylesheet" href="./styles/elementui.css">
+  <script src="./scripts/vue.js"></script>
+  <script src="./scripts/elementui.js"></script>
+  <script src="./scripts/axios.js"></script>
   <script src="./scripts/main.js"></script>
 </head>
 <body>
@@ -33,13 +33,18 @@
             :autofocus="true">
           </el-input>
         </div>
-        <el-button @click="searchIcon">搜索</el-button>
+        <el-button type="primary" @click="searchIcon">搜索</el-button>
       </header>
       <!-- 搜索结果区域 -->
       <div class="search-result-container">
         <ul class="search-list" v-if="searchList.length > 0">
           <li class="search-item" v-for="item in searchList" :key="item.id">
             <div class="svg-block" v-html="item.svg"></div>
+            <div class="en-name">
+              <span v-if="item.en_name">{{ item.en_name}}</span>
+              <span v-else style="color: #fd4332">请提示UI上传icon-name</span>
+            </div>
+            <div class="zh-name">{{ item.zh_name }}</div>
             <div class="checkbox-block">
               <el-checkbox v-model="item.checked" @change="checkedChange"></el-checkbox>
             </div>
@@ -56,16 +61,17 @@
         <ul class="choosed-icon-list">
           <li class="choosed-icon-item" v-for="(item, index) in choosedList" :key="item">
             <i class="el-icon-circle-close close-icon" @click="cancelChoose(item)"></i>
-            <div class="icon" v-html="item.svg"></div>
-            <!-- <div class="name">{{ item.en_name }}</div> -->
+            <el-tooltip class="tool-tip" effect="dark" :content="item.en_name" placement="top-start">
+              <div class="icon" v-html="item.svg"></div>
+            </el-tooltip>
           </li>
         </ul>
 
         <!-- 按钮操作区域 -->
         <div class="btns-block" v-if="choosedList.length > 0">
-          <el-button @click="exportSvgSymbolsFile">导出SymbolsJS</el-button>
-          <el-button @click="exportSvgFile">导出SVG文件</el-button>
-          <el-button @click="reset">重置(同时清空Storage)</el-button>
+          <el-button type="primary" @click="exportSvgSymbolsFile">导出SymbolsJS</el-button>
+          <el-button type="success" @click="exportSvgFile">导出SVG文件</el-button>
+          <el-button type="danger" @click="reset">重置(同时清空Storage)</el-button>
         </div>
       </div>
 
@@ -115,20 +121,20 @@
         },
       },
       methods: {
-        async getDepartmentList() {
-          this.loading = true;
-          const res = await axios.get(departmentUrl);
-          if (res.data.status_code === 0) {
-            this.departmentList = res.data.data;
-            if (isTrueArray(this.departmentList)) {
-              this.departmentList.unshift({
-                id: 0,
-                name: '全部'
-              })
-            }
-          }
-          this.loading = false;
-        },
+        // async getDepartmentList() {
+        //   this.loading = true;
+        //   const res = await axios.get(departmentUrl);
+        //   if (res.data.status_code === 0) {
+        //     this.departmentList = res.data.data;
+        //     if (isTrueArray(this.departmentList)) {
+        //       this.departmentList.unshift({
+        //         id: 0,
+        //         name: '全部'
+        //       })
+        //     }
+        //   }
+        //   this.loading = false;
+        // },
 
         async searchIcon() {
           this.loading = true;
@@ -144,7 +150,8 @@
               this.searchList.forEach(item => {
                 item['checked'] = this.choosedList.some(
                   chooseItem => chooseItem.id === item.id
-                ) ? true : ''
+                ) ? true : '';
+                item['svg'] = dealSvgFile(item['svg']);
               })
             }
           }
@@ -259,13 +266,26 @@
         },
 
         init() {
-          this.getDepartmentList();
+          // this.getDepartmentList();
+          // TODO: 这里日后需要替换成接口获取
+          this.departmentList = departmentList;
+          this.departmentList.unshift({
+            id: 0,
+            name: '全部'
+          })
+
           this.initStorage();
           this.initEnterKeyListener();
         }
       },
       created() {
         this.init();
+      },
+
+      mounted() {
+        // iframe里面嵌入的body元素默认有10px的左右padding, 这里通过js去修改
+        const body = document.querySelector('body');
+        body.style.padding = 0;
       },
 
       beforeDestroy() {
